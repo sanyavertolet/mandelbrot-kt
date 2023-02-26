@@ -3,6 +3,7 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 plugins {
     kotlin("multiplatform")
     id("org.jetbrains.compose")
+    id("org.cqfn.diktat.diktat-gradle-plugin") version "1.2.3"
 }
 
 group = "com.sanyavertolet"
@@ -27,6 +28,7 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation("org.junit.jupiter:junit-jupiter:5.8.1")
+
             }
         }
         val jvmTest by getting
@@ -41,6 +43,13 @@ compose.desktop {
             packageName = "mandelbrot"
             packageVersion = "1.0.0"
         }
+    }
+}
+
+diktat {
+    inputs {
+        include("src/**/*.kt")
+        exclude("src/*Test/**/*.kt")
     }
 }
 
