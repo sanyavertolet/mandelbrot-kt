@@ -1,4 +1,4 @@
-package com.sanyavertolet.mandelbrot.complex
+package com.sanyavertolet.mandelbrot.backend.complex
 
 import kotlin.math.sqrt
 import kotlin.random.Random

@@ -18,22 +18,23 @@ import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.withSave
 import androidx.compose.ui.unit.dp
-import com.sanyavertolet.mandelbrot.fractal.SetCounter
+import com.sanyavertolet.mandelbrot.backend.fractal.AbstractFractal
 
 /**
- * @param selectedSet current [SetCounter] or null if none is selected
+ * @param fractal current fractal or null if none is selected
  * @param complexRect rectangle in complex coordinates
+ * @param fractal
  */
 @Composable
-fun canvas(selectedSet: SetCounter?, complexRect: Rect) {
+fun canvas(fractal: AbstractFractal?, complexRect: Rect) {
     var image by remember { mutableStateOf<ImageBitmap?>(null) }
 
     var screenSize by remember { mutableStateOf<Size?>(null) }
 
-    LaunchedEffect(complexRect, selectedSet, screenSize) {
-        selectedSet?.let { setCounter ->
+    LaunchedEffect(complexRect, fractal, screenSize) {
+        fractal?.let { fractal ->
             screenSize?.let { size ->
-                image = setCounter.getImage(size, complexRect)
+                image = fractal.getImage(size, complexRect)
             }
         }
     }

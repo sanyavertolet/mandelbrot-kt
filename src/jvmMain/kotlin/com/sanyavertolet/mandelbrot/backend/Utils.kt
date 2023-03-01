@@ -2,11 +2,11 @@
  * Utils
  */
 
-package com.sanyavertolet.mandelbrot
+package com.sanyavertolet.mandelbrot.backend
 
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import com.sanyavertolet.mandelbrot.complex.Complex
+import com.sanyavertolet.mandelbrot.backend.complex.Complex
 
 /**
  * @param x horizontal screen coordinates

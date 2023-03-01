@@ -1,5 +1,6 @@
 package com.sanyavertolet.mandelbrot.complex
 
+import com.sanyavertolet.mandelbrot.backend.complex.nextComplex
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.RepeatedTest
 import kotlin.math.sqrt

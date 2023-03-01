@@ -3,7 +3,7 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 plugins {
     kotlin("multiplatform")
     id("org.jetbrains.compose")
-    id("org.cqfn.diktat.diktat-gradle-plugin") version "1.2.3"
+    id("org.cqfn.diktat.diktat-gradle-plugin") version "1.2.4.1"
 }
 
 group = "com.sanyavertolet"
@@ -19,7 +19,7 @@ repositories {
 kotlin {
     jvm {
         compilations.all {
-            kotlinOptions.jvmTarget = "11"
+            kotlinOptions.jvmTarget = "17"
         }
         withJava()
     }
@@ -28,7 +28,6 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation("org.junit.jupiter:junit-jupiter:5.8.1")
-
             }
         }
         val jvmTest by getting
@@ -47,6 +46,7 @@ compose.desktop {
 }
 
 diktat {
+    diktatConfigFile = rootProject.file("diktat-analysis.yml")
     inputs {
         include("src/**/*.kt")
         exclude("src/*Test/**/*.kt")
