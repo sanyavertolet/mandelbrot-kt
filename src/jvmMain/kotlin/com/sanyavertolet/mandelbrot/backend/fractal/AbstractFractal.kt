@@ -6,15 +6,18 @@ package com.sanyavertolet.mandelbrot.backend.fractal
 
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.*
 
 import com.sanyavertolet.mandelbrot.backend.Function
 import com.sanyavertolet.mandelbrot.backend.FunctionType
 import com.sanyavertolet.mandelbrot.backend.JuliaFunction
+import com.sanyavertolet.mandelbrot.backend.PainterType
 import com.sanyavertolet.mandelbrot.backend.complex.Complex
 import com.sanyavertolet.mandelbrot.backend.counter.Counter
+import com.sanyavertolet.mandelbrot.backend.counter.CounterType
 
 /**
- * @property function
+ * @property function fractal function, e.g. z_{n+1} = z_{n}^2 + c
  */
 sealed class AbstractFractal(
     private val counter: Counter,
@@ -23,8 +26,44 @@ sealed class AbstractFractal(
     /**
      * @param pixelSize
      * @param complexRect
+     * @param isSmooth
      */
-    suspend fun getImage(pixelSize: Size, complexRect: Rect) = counter.getImage(pixelSize, complexRect)
+    fun getImage(pixelSize: Size, complexRect: Rect, isSmooth: Boolean) = counter.getImage(pixelSize, complexRect, isSmooth)
+
+    /**
+     * @param bitmap
+     * @param complexRect
+     */
+    fun getPixelsToPaint(bitmap: ImageBitmap, complexRect: Rect) = counter.getPixelsToPaint(bitmap, complexRect)
+
+    companion object {
+        /**
+         * @param selectedCounterName
+         * @param selectedFunctionName
+         * @param selectedPainterName
+         * @return [AbstractFractal] with counter with [selectedCounterName], function with [selectedFunctionName], painter with [selectedPainterName]
+         */
+        fun factory(selectedCounterName: String?, selectedFunctionName: String?, selectedPainterName: String?): AbstractFractal {
+            val functionType = requireNotNull(FunctionType.values().find { it.prettyName == selectedFunctionName })
+            val painterType = requireNotNull(PainterType.values().find { it.prettyName == selectedPainterName })
+            val counterType = requireNotNull(CounterType.values().find { it.prettyName == selectedCounterName })
+            val counter = counterType.getInstance(functionType.instance, painterType.instance, Counter.MAX_ITERATIONS, Counter.BORDER_VALUE)
+            return when (functionType) {
+                FunctionType.MANDELBROT -> MandelbrotFractal(counter)
+                FunctionType.JULIA -> JuliaFractal(counter)
+            }
+        }
+
+        /**
+         * @param fractal [AbstractFractal] instance built from painter, function and counter
+         */
+        @Suppress("MAGIC_NUMBER")
+        fun getInitialComplexRect(fractal: AbstractFractal?) = when (fractal) {
+            is JuliaFractal -> Rect(-1.5f, 1.5f, 1.5f, -1.5f)
+            is MandelbrotFractal -> Rect(-2f, 1f, 1f, -1f)
+            else -> Rect(-1f, 1f, 1f, -1f)
+        }
+    }
 }
 
 /**

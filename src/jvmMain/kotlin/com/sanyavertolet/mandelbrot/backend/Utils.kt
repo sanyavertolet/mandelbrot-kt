@@ -4,9 +4,21 @@
 
 package com.sanyavertolet.mandelbrot.backend
 
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import com.sanyavertolet.mandelbrot.backend.complex.Complex
+
+/**
+ * Change Rect size according to [scale]
+ *
+ * @param scale scale coefficient
+ * @return [Rect] zoomed by [scale]
+ */
+@Suppress("FLOAT_IN_ACCURATE_CALCULATIONS", "MAGIC_NUMBER")
+fun Rect.scale(scale: Float): Rect = Offset(width - width / scale, height - height / scale).let { delta ->
+    Rect(topLeft + delta / 2f, bottomRight - delta / 2f)
+}
 
 /**
  * @param x horizontal screen coordinates

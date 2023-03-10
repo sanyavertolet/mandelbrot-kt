@@ -9,8 +9,11 @@ private const val MAX_DOUBLE = 1_000_000.0
  * @property re real part of complex number
  * @property im imaginary part of complex number
  */
-class Complex(val re: Double = 0.0, val im: Double = 0.0) : Comparable<Complex> {
-    private fun sqr() = re * re + im * im
+data class Complex(val re: Double = 0.0, val im: Double = 0.0) : Comparable<Complex> {
+    /**
+     * @return squared complex vector length
+     */
+    fun sqr() = re * re + im * im
 
     /**
      * @return complex vector length
