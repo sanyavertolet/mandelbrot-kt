@@ -53,16 +53,6 @@ sealed class AbstractFractal(
                 FunctionType.JULIA -> JuliaFractal(counter)
             }
         }
-
-        /**
-         * @param fractal [AbstractFractal] instance built from painter, function and counter
-         */
-        @Suppress("MAGIC_NUMBER")
-        fun getInitialComplexRect(fractal: AbstractFractal?) = when (fractal) {
-            is JuliaFractal -> Rect(-1.5f, 1.5f, 1.5f, -1.5f)
-            is MandelbrotFractal -> Rect(-2f, 1f, 1f, -1f)
-            else -> Rect(-1f, 1f, 1f, -1f)
-        }
     }
 }
 

@@ -1,8 +1,8 @@
 /**
- * Canvas
+ * Canvas that waits until all the Bitmap is prepared
  */
 
-package com.sanyavertolet.mandelbrot.frontend.components
+package com.sanyavertolet.mandelbrot.frontend.components.canvas
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,21 +12,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.input.pointer.*
-import com.sanyavertolet.mandelbrot.Pixel
+import androidx.compose.ui.graphics.withSave
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isPrimaryPressed
+import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.input.pointer.positionChange
 import com.sanyavertolet.mandelbrot.backend.complex.Complex
 import com.sanyavertolet.mandelbrot.backend.fractal.AbstractFractal
 import com.sanyavertolet.mandelbrot.backend.fractal.JuliaFractal
-import com.sanyavertolet.mandelbrot.backend.scale
+import com.sanyavertolet.mandelbrot.common.fixRatio
 import com.sanyavertolet.mandelbrot.common.pixelsToComplex
-
-import kotlinx.coroutines.flow.*
+import com.sanyavertolet.mandelbrot.common.scale
 
 private const val DEFAULT_SCALING_COEFFICIENT = 0.05f
-
-private val emptyBitmap = ImageBitmap(2, 2)
 
 /**
  * @param fractal current fractal or null if none is selected
@@ -38,7 +40,7 @@ private val emptyBitmap = ImageBitmap(2, 2)
 fun syncCanvas(fractal: AbstractFractal?, constant: Complex) {
     var image by remember { mutableStateOf<ImageBitmap?>(null) }
     var screenSize by remember { mutableStateOf<Size?>(null) }
-    var complexRect: Rect by remember { mutableStateOf(AbstractFractal.getInitialComplexRect(fractal)) }
+    var complexRect: Rect by remember { mutableStateOf(Rect(-2f, 2f, 2f, -2f)) }
 
     val updateFractal = {
         fractal.apply {
@@ -71,15 +73,11 @@ fun syncCanvas(fractal: AbstractFractal?, constant: Complex) {
         }
     }
 
-    LaunchedEffect(screenSize) {
-        /*
-         * todo: Window resize processing
-         */
-        updateFractal()
-    }
-
-    LaunchedEffect(fractal, constant) {
-        updateFractal()
+    LaunchedEffect(fractal, constant, screenSize) {
+        screenSize?.let { size ->
+            complexRect = complexRect.fixRatio(size.width / size.height)
+            updateFractal()
+        }
     }
 
     Canvas(
@@ -107,56 +105,6 @@ fun syncCanvas(fractal: AbstractFractal?, constant: Complex) {
                         Paint().apply { color = Color.Green },
                     )
                 }
-            }
-        }
-    }
-}
-
-/**
- * WIP
- *
- * @param fractal
- * @param constant
- * @param complexRect
- * todo: implement drawing fractal asynchronously
- */
-@Composable
-fun asyncCanvas(fractal: AbstractFractal?, constant: Complex, complexRect: Rect) {
-    var screenSize by remember { mutableStateOf<Size?>(null) }
-    var bitmap: ImageBitmap? by remember { mutableStateOf(null) }
-    var dots: List<Pixel> by remember { mutableStateOf(emptyList()) }
-
-    LaunchedEffect(complexRect, fractal, screenSize, constant) {
-        screenSize?.let {
-            bitmap ?: run { bitmap = ImageBitmap(it.width.toInt(), it.height.toInt()) }
-        }
-
-        val pixelFlow = fractal.apply {
-            if (this is JuliaFractal) {
-                setConstant(constant)
-            }
-        }?.let { fractal ->
-            bitmap?.let { bitmap ->
-                fractal.getPixelsToPaint(bitmap, complexRect)
-            }
-        } ?: emptyFlow()
-
-        dots = pixelFlow.toList()
-
-        pixelFlow.map {
-            bitmap = bitmap?.toAwtImage()?.apply { setRGB(it.x, it.y, it.color.toArgb()) }?.toComposeImageBitmap()
-        }
-    }
-
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        screenSize = size
-        drawIntoCanvas { canvas ->
-            canvas.withSave {
-                canvas.drawImage(
-                    bitmap ?: emptyBitmap,
-                    Offset(0f, 0f),
-                    Paint()
-                )
             }
         }
     }
