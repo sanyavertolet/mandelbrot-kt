@@ -7,6 +7,7 @@ package com.sanyavertolet.mandelbrot.backend
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import com.sanyavertolet.mandelbrot.backend.counter.Counter
+import kotlin.math.ceil
 
 /**
  * Class that colors the pixel depending on iteration amount
@@ -30,7 +31,7 @@ abstract class Gradient : Painter() {
      * List of [Color]s that should be used to colorize the fractal
      */
     abstract val colorPalette: List<Color>
-    private val colorLength by lazy { Counter.MAX_ITERATIONS / colorPalette.size.toDouble() }
+    private val colorLength by lazy { Counter.DEFAULT_MAX_ITERATIONS / colorPalette.size.toDouble() }
     override operator fun invoke(iterations: Double): Color = getLowerColorIndex(iterations).let { lowerColorIndex ->
         lowerColorIndex to getOverflow(iterations, lowerColorIndex)
     }
@@ -55,7 +56,7 @@ enum class PainterType(val prettyName: String, val instance: Painter) {
 }
 
 private object BlackPainter : Painter() {
-    override fun invoke(iterations: Double): Color = Color.Black.takeIf { iterations.toInt() == Counter.MAX_ITERATIONS } ?: Color.Unspecified
+    override fun invoke(iterations: Double): Color = Color.Black.takeIf { ceil(iterations).toInt() == Counter.DEFAULT_MAX_ITERATIONS } ?: Color.Unspecified
 }
 
 @OptIn(ExperimentalStdlibApi::class)

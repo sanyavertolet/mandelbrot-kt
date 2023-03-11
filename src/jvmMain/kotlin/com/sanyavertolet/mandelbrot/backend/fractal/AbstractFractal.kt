@@ -24,19 +24,25 @@ sealed class AbstractFractal(
     protected val function: Function,
 ) {
     /**
-     * @param pixelSize
-     * @param complexRect
+     * @param pixelSize canvas [Size] in pixels
+     * @param complexRect complex rectangle corresponding to current screen
      * @param isSmooth
      */
     fun getImage(pixelSize: Size, complexRect: Rect, isSmooth: Boolean) = counter.getImage(pixelSize, complexRect, isSmooth)
 
     /**
      * @param bitmap
-     * @param complexRect
+     * @param complexRect complex rectangle corresponding to current screen
      */
     fun getPixelsToPaint(bitmap: ImageBitmap, complexRect: Rect) = counter.getPixelsToPaint(bitmap, complexRect)
 
     companion object {
+        /**
+         * Default [Rect] - subset of complex rect
+         */
+        @Suppress("MAGIC_NUMBER")
+        val defaultComplexRect = Rect(-2f, 2f, 2f, -2f)
+
         /**
          * @param selectedCounterName
          * @param selectedFunctionName
@@ -47,7 +53,7 @@ sealed class AbstractFractal(
             val functionType = requireNotNull(FunctionType.values().find { it.prettyName == selectedFunctionName })
             val painterType = requireNotNull(PainterType.values().find { it.prettyName == selectedPainterName })
             val counterType = requireNotNull(CounterType.values().find { it.prettyName == selectedCounterName })
-            val counter = counterType.getInstance(functionType.instance, painterType.instance, Counter.MAX_ITERATIONS, Counter.BORDER_VALUE)
+            val counter = counterType.getInstance(functionType.instance, painterType.instance, Counter.DEFAULT_MAX_ITERATIONS, Counter.DEFAULT_BORDER_VALUE)
             return when (functionType) {
                 FunctionType.MANDELBROT -> MandelbrotFractal(counter)
                 FunctionType.JULIA -> JuliaFractal(counter)

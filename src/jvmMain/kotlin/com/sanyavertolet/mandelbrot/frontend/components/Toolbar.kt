@@ -35,7 +35,7 @@ enum class ToolbarItem(val prettyName: String, val options: List<String>) {
 }
 
 /**
- * @param fractal selected fractal
+ * @param fractal currently built fractal
  * @param setConstant callback to set the constant for Julia set
  * @param onChange callback that should be invoked when dropdown entity is selected
  */

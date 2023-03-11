@@ -24,7 +24,7 @@ inline fun <T> Iterable<T>.sumOf(selector: (T) -> Offset): Offset {
 }
 
 /**
- * @param pixelSize [Size] filled with integers - screen size
+ * @param pixelSize canvas [Size] in pixels
  * @param complexSize [Size] filled with floats - complex plane fragment size
  * @return [Offset] filled with complex values corresponding to initial pixel values
  */

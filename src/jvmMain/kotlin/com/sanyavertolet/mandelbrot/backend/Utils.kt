@@ -11,7 +11,7 @@ import com.sanyavertolet.mandelbrot.backend.complex.Complex
 /**
  * @param x horizontal screen coordinates
  * @param y vertical screen coordinates
- * @param pixelSize [Size] of canvas in pixels
+ * @param pixelSize canvas [Size] in pixels
  * @param complexRect complex rectangle corresponding to current screen
  * @return [Complex] coordinates of dot with coordinates [x] and [y]
  */

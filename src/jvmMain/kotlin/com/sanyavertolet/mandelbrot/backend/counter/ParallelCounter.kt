@@ -19,8 +19,8 @@ import kotlinx.coroutines.*
 class ParallelCounter(
     private val painter: Painter,
     function: Function,
-    maxIterations: Int = MAX_ITERATIONS,
-    borderValue: Double = BORDER_VALUE,
+    maxIterations: Int = DEFAULT_MAX_ITERATIONS,
+    borderValue: Double = DEFAULT_BORDER_VALUE,
 ) : Counter(
     function,
     maxIterations,
@@ -28,8 +28,8 @@ class ParallelCounter(
     painter
 ) {
     @OptIn(DelicateCoroutinesApi::class)
-    private val threadPool = newFixedThreadPoolContext(8, javaClass.name)
-    private val scope: CoroutineScope = CoroutineScope(threadPool)
+    override val dispatcher = newFixedThreadPoolContext(8, javaClass.name)
+    private val scope: CoroutineScope = CoroutineScope(dispatcher)
 
     override fun paintFractalPixels(
         pixelSize: Size,
@@ -46,6 +46,5 @@ class ParallelCounter(
                 val finalIteration = calculate(currentPoint, isSmooth)
                 applyPixel(x, y, painter(finalIteration).toArgb())
             }
-        }
-        .let { Unit }
+        }.let { Unit }
 }

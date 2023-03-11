@@ -9,6 +9,7 @@ import com.sanyavertolet.mandelbrot.backend.Painter
 import com.sanyavertolet.mandelbrot.backend.cartesianProduct
 import com.sanyavertolet.mandelbrot.backend.cartesianToComplex
 import com.sanyavertolet.mandelbrot.backend.listUntil
+import kotlinx.coroutines.*
 
 /**
  * [Counter] that calculates all the values synchronously
@@ -16,20 +17,22 @@ import com.sanyavertolet.mandelbrot.backend.listUntil
 class SerialCounter(
     private val painter: Painter,
     function: Function,
-    maxIterations: Int = MAX_ITERATIONS,
-    borderValue: Double = BORDER_VALUE,
+    maxIterations: Int = DEFAULT_MAX_ITERATIONS,
+    borderValue: Double = DEFAULT_BORDER_VALUE,
 ) : Counter(
     function,
     maxIterations,
     borderValue,
     painter
 ) {
+    override val dispatcher = Dispatchers.Default
+
     override fun paintFractalPixels(
         pixelSize: Size,
         complexRect: Rect,
         isSmooth: Boolean,
         applyPixel: (Int, Int, Int) -> Unit
-    ): Unit = cartesianProduct(
+    ) = cartesianProduct(
         listUntil(pixelSize.width.toInt()),
         listUntil(pixelSize.height.toInt())
     )

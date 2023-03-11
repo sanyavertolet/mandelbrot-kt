@@ -5,69 +5,63 @@
 package com.sanyavertolet.mandelbrot.frontend.components.canvas
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import com.sanyavertolet.mandelbrot.Pixel
 import com.sanyavertolet.mandelbrot.backend.complex.Complex
 import com.sanyavertolet.mandelbrot.backend.fractal.AbstractFractal
 import com.sanyavertolet.mandelbrot.backend.fractal.JuliaFractal
+import com.sanyavertolet.mandelbrot.frontend.components.StateUpdater
 
 import kotlinx.coroutines.flow.*
 
 private val emptyBitmap = ImageBitmap(2, 2)
 
+private fun DrawScope.asyncDraw(image: ImageBitmap?) = drawIntoCanvas { canvas ->
+    canvas.withSave {
+        canvas.drawImage(
+            image ?: emptyBitmap,
+            Offset.Zero,
+            Paint(),
+        )
+    }
+}
+
 /**
- * WIP
+ * [Canvas] that is suitable for fractal rendering and future re-rendering with async strategy
  *
- * @param fractal
- * @param constant
- * @param complexRect
- * todo: implement drawing fractal asynchronously
+ * @param fractal currently built fractal
+ * @param constant [Complex] constant that makes sense only for Julia set
+ * @return [Unit]
  */
 @Composable
-fun asyncCanvas(fractal: AbstractFractal?, constant: Complex, complexRect: Rect) {
-    var screenSize by remember { mutableStateOf<Size?>(null) }
-    var bitmap: ImageBitmap? by remember { mutableStateOf(null) }
-    var dots: List<Pixel> by remember { mutableStateOf(emptyList()) }
+fun asyncCanvas(fractal: AbstractFractal?, constant: Complex) = fractalCanvas(fractal, constant, ::asyncImageUpdater, DrawScope::asyncDraw)
 
-    LaunchedEffect(complexRect, fractal, screenSize, constant) {
-        screenSize?.let {
-            bitmap ?: run { bitmap = ImageBitmap(it.width.toInt(), it.height.toInt()) }
+@Suppress("TOO_MANY_PARAMETERS")
+private suspend fun asyncImageUpdater(
+    abstractFractal: AbstractFractal?,
+    constant: Complex,
+    image: ImageBitmap?,
+    screenSize: Size?,
+    complexRect: Rect,
+    updateImage: StateUpdater<ImageBitmap?>,
+) {
+    abstractFractal.apply {
+        if (this is JuliaFractal) {
+            setConstant(constant)
         }
-
-        val pixelFlow = fractal.apply {
-            if (this is JuliaFractal) {
-                setConstant(constant)
-            }
-        }?.let { fractal ->
-            bitmap?.let { bitmap ->
+    }
+        ?.let { fractal ->
+            image?.let { bitmap ->
                 fractal.getPixelsToPaint(bitmap, complexRect)
             }
-        } ?: emptyFlow()
-
-        dots = pixelFlow.toList()
-
-        pixelFlow.map {
-            bitmap = bitmap?.toAwtImage()?.apply { setRGB(it.x, it.y, it.color.toArgb()) }?.toComposeImageBitmap()
         }
-    }
-
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        screenSize = size
-        drawIntoCanvas { canvas ->
-            canvas.withSave {
-                canvas.drawImage(
-                    bitmap ?: emptyBitmap,
-                    Offset(0f, 0f),
-                    Paint()
-                )
-            }
+        ?.map { pixel ->
+            updateImage { image?.toAwtImage()?.apply { setRGB(pixel.x, pixel.y, pixel.color.toArgb()) }?.toComposeImageBitmap() }
         }
-    }
+        ?.collect()
 }
