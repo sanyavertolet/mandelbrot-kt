@@ -30,14 +30,14 @@ abstract class Counter(
      */
     fun calculate(currentPoint: Complex, isSmooth: Boolean): Double {
         var value = function.getStartingValue(currentPoint)
-        var iteration = 0
+        var iteration = 1
         val constant = function.getConstant(currentPoint)
         while (value.sqr() < borderValue && iteration < maxIterations) {
             value = function(value, constant)
             iteration += 1
         }
         return if (isSmooth) {
-            iteration.toDouble() - log2(max(1.0, log2(value.abs())))
+            iteration.toDouble().minus(log2(max(1.0, log2(value.abs())))).takeIf { it >= 0 } ?: 0.0
         } else {
             iteration.toDouble()
         }
@@ -91,6 +91,6 @@ abstract class Counter(
     }
     companion object {
         const val BORDER_VALUE = 3.0
-        const val MAX_ITERATIONS = 100
+        const val MAX_ITERATIONS = 200
     }
 }

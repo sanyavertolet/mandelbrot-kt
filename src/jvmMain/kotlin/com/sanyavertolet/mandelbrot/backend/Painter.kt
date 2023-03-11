@@ -39,7 +39,7 @@ abstract class Gradient : Painter() {
         }
 
     private fun getOverflow(iterations: Double, lowerColorIndex: Int) = (iterations - lowerColorIndex * colorLength).toFloat()
-    private fun getLowerColorIndex(iterations: Double): Int = colorPalette.indices.last { colorLength * it < iterations }
+    private fun getLowerColorIndex(iterations: Double): Int = colorPalette.indices.lastOrNull { colorLength * it < iterations } ?: 0
     private fun getHigherColorIndex(lowerColorIndex: Int): Int = if (lowerColorIndex + 1 == colorPalette.size) lowerColorIndex else lowerColorIndex + 1
 }
 

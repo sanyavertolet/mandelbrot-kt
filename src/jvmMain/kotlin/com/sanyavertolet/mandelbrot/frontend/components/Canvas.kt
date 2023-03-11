@@ -14,14 +14,17 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.input.pointer.*
 import com.sanyavertolet.mandelbrot.Pixel
 import com.sanyavertolet.mandelbrot.backend.complex.Complex
 import com.sanyavertolet.mandelbrot.backend.fractal.AbstractFractal
 import com.sanyavertolet.mandelbrot.backend.fractal.JuliaFractal
 import com.sanyavertolet.mandelbrot.backend.scale
+import com.sanyavertolet.mandelbrot.common.pixelsToComplex
+
 import kotlinx.coroutines.flow.*
+
+private const val DEFAULT_SCALING_COEFFICIENT = 0.05f
 
 private val emptyBitmap = ImageBitmap(2, 2)
 
@@ -31,15 +34,13 @@ private val emptyBitmap = ImageBitmap(2, 2)
  */
 @Composable
 @ExperimentalComposeUiApi
-@Suppress("MAGIC_NUMBER")
+@Suppress("MAGIC_NUMBER", "TOO_LONG_FUNCTION")
 fun syncCanvas(fractal: AbstractFractal?, constant: Complex) {
     var image by remember { mutableStateOf<ImageBitmap?>(null) }
     var screenSize by remember { mutableStateOf<Size?>(null) }
-    var scale by remember { mutableStateOf(1f) }
     var complexRect: Rect by remember { mutableStateOf(AbstractFractal.getInitialComplexRect(fractal)) }
-    LaunchedEffect(complexRect, fractal, screenSize, constant) {
-        complexRect = AbstractFractal.getInitialComplexRect(fractal).scale(scale)
 
+    val updateFractal = {
         fractal.apply {
             if (this is JuliaFractal) {
                 setConstant(constant)
@@ -52,13 +53,49 @@ fun syncCanvas(fractal: AbstractFractal?, constant: Complex) {
             }
     }
 
-    Canvas(
-        modifier = Modifier.fillMaxSize().onPointerEvent(PointerEventType.Scroll) {
-            val toScale = it.changes.first().scrollDelta.y
-            if (scale > toScale) {
-                scale += toScale
-            }
+    var deltaScale by remember { mutableStateOf(0) }
+    LaunchedEffect(deltaScale) {
+        if (deltaScale != 0) {
+            complexRect = complexRect.scale(DEFAULT_SCALING_COEFFICIENT * deltaScale)
+            deltaScale = 0
+            updateFractal()
         }
+    }
+
+    var deltaOffset by remember { mutableStateOf(Offset.Zero) }
+    LaunchedEffect(deltaOffset) {
+        if (deltaOffset != Offset.Zero) {
+            complexRect = complexRect.translate(deltaOffset)
+            deltaOffset = Offset.Zero
+            updateFractal()
+        }
+    }
+
+    LaunchedEffect(screenSize) {
+        /*
+         * todo: Window resize processing
+         */
+        updateFractal()
+    }
+
+    LaunchedEffect(fractal, constant) {
+        updateFractal()
+    }
+
+    Canvas(
+        modifier = Modifier.fillMaxSize()
+            .onPointerEvent(PointerEventType.Scroll) { event ->
+                val toScale = event.changes.first().scrollDelta.y
+                    .times(10).toInt()
+                deltaScale = toScale
+            }
+            .onPointerEvent(PointerEventType.Move) { event ->
+                if (event.buttons.isPrimaryPressed) {
+                    screenSize?.let { pixelSize ->
+                        deltaOffset = -event.changes.first().positionChange().pixelsToComplex(pixelSize, complexRect.size)
+                    }
+                }
+            }
     ) {
         screenSize = size
         image?.let { completedImage ->

@@ -16,7 +16,7 @@ import com.sanyavertolet.mandelbrot.backend.complex.Complex
  * @return [Rect] zoomed by [scale]
  */
 @Suppress("FLOAT_IN_ACCURATE_CALCULATIONS", "MAGIC_NUMBER")
-fun Rect.scale(scale: Float): Rect = Offset(width - width / scale, height - height / scale).let { delta ->
+fun Rect.scale(scale: Float): Rect = Offset(width * scale, height * scale).let { delta ->
     Rect(topLeft + delta / 2f, bottomRight - delta / 2f)
 }
 
