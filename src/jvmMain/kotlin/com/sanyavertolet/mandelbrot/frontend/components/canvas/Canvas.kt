@@ -16,6 +16,11 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import com.sanyavertolet.mandelbrot.backend.complex.Complex
 import com.sanyavertolet.mandelbrot.backend.fractal.AbstractFractal
 import com.sanyavertolet.mandelbrot.frontend.components.StateUpdater
+import org.slf4j.LoggerFactory
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
+
+private val logger = LoggerFactory.getLogger(object {}.javaClass.enclosingClass)
 
 private typealias ImageUpdater = suspend (AbstractFractal?, Complex, ImageBitmap?, Size?, Rect, StateUpdater<ImageBitmap?>) -> Unit
 
@@ -45,6 +50,7 @@ fun defaultCanvasModifier(
  * @param drawImage fractal drawing strategy
  */
 @Composable
+@OptIn(ExperimentalTime::class)
 internal fun fractalCanvas(
     fractal: AbstractFractal?,
     constant: Complex,
@@ -56,7 +62,12 @@ internal fun fractalCanvas(
 
     var screenSize: Size? by remember { mutableStateOf(null) }
     var image: ImageBitmap? by remember { mutableStateOf(null) }
-    val updateImage: suspend () -> Unit = { imageUpdater(fractal, constant, image, screenSize, complexRect) { image = it(image) } }
+    val updateImage: suspend () -> Unit = {
+        measureTime {
+            imageUpdater(fractal, constant, image, screenSize, complexRect) { image = it(image) }
+        }
+            .also { logger.debug("Fractal rendering took $it") }
+    }
 
     val updateScale = scaleEffect(updateComplexRect, updateImage = updateImage)
     val updateOffset = offsetEffect(updateComplexRect, updateImage)
@@ -64,6 +75,7 @@ internal fun fractalCanvas(
 
     Canvas(modifier = defaultCanvasModifier(screenSize, complexRect, updateOffset, updateScale)) {
         screenSize = size
+        image ?: run { image = ImageBitmap(size.width.toInt(), size.height.toInt()) }
         drawImage(image)
     }
 }
