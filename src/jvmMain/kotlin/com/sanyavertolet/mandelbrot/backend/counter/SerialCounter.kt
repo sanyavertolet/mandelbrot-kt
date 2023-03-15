@@ -23,11 +23,10 @@ class SerialCounter(
     function,
     maxIterations,
     borderValue,
-    painter
 ) {
-    override val dispatcher = Dispatchers.Default
+    override val dispatcher = Dispatchers.Unconfined
 
-    override fun paintFractalPixels(
+    override suspend fun paintFractalPixels(
         pixelSize: Size,
         complexRect: Rect,
         isSmooth: Boolean,

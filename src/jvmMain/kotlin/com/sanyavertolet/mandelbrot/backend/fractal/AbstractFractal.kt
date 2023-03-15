@@ -30,12 +30,6 @@ sealed class AbstractFractal(
      */
     fun getImage(pixelSize: Size, complexRect: Rect, isSmooth: Boolean) = counter.getImage(pixelSize, complexRect, isSmooth)
 
-    /**
-     * @param bitmap
-     * @param complexRect complex rectangle corresponding to current screen
-     */
-    fun getPixelsToPaint(bitmap: ImageBitmap, complexRect: Rect) = counter.getPixelsToPaint(bitmap, complexRect)
-
     companion object {
         /**
          * Default [Rect] - subset of complex rect

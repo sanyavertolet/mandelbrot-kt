@@ -25,13 +25,10 @@ class ParallelCounter(
     function,
     maxIterations,
     borderValue,
-    painter
 ) {
-    @OptIn(DelicateCoroutinesApi::class)
-    override val dispatcher = newFixedThreadPoolContext(8, javaClass.name)
-    private val scope: CoroutineScope = CoroutineScope(dispatcher)
+    override val dispatcher = Dispatchers.Default
 
-    override fun paintFractalPixels(
+    override suspend fun paintFractalPixels(
         pixelSize: Size,
         complexRect: Rect,
         isSmooth: Boolean,
@@ -41,10 +38,10 @@ class ParallelCounter(
         listUntil(pixelSize.height.toInt())
     )
         .map { (x, y) ->
-            val currentPoint = cartesianToComplex(x, y, pixelSize, complexRect)
-            scope.async {
-                val finalIteration = calculate(currentPoint, isSmooth)
+            scope.launch {
+                val finalIteration = calculate(cartesianToComplex(x, y, pixelSize, complexRect), isSmooth)
                 applyPixel(x, y, painter(finalIteration).toArgb())
             }
-        }.let { Unit }
+        }
+        .joinAll()
 }

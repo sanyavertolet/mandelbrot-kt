@@ -4,18 +4,12 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
 
-import com.sanyavertolet.mandelbrot.Pixel
-import com.sanyavertolet.mandelbrot.backend.*
 import com.sanyavertolet.mandelbrot.backend.Function
 import com.sanyavertolet.mandelbrot.backend.complex.Complex
 
 import kotlin.math.log2
 import kotlin.math.max
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.buffer
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 
 /**
  * Abstract counter that calculates all the values for image
@@ -24,12 +18,16 @@ abstract class Counter(
     private val function: Function,
     private val maxIterations: Int,
     private val borderValue: Double,
-    private val painter: Painter
 ) {
     /**
      * [CoroutineDispatcher] that is used for fractal calculations
      */
     protected abstract val dispatcher: CoroutineDispatcher
+
+    /**
+     * [CoroutineScope] made with [dispatcher] context
+     */
+    protected val scope: CoroutineScope by lazy { CoroutineScope(dispatcher) }
 
     /**
      * @param currentPoint
@@ -62,8 +60,12 @@ abstract class Counter(
         complexRect: Rect,
         isSmooth: Boolean,
     ): ImageBitmap = ImageBitmap(pixelSize.width.toInt(), pixelSize.height.toInt()).toAwtImage().apply {
-        paintFractalPixels(pixelSize, complexRect, isSmooth) { x, y, argbColor ->
-            setRGB(x, y, argbColor)
+        runBlocking {
+            scope.async {
+                paintFractalPixels(pixelSize, complexRect, isSmooth) { x, y, argbColor ->
+                    setRGB(x, y, argbColor)
+                }
+            }.await()
         }
     }.toComposeImageBitmap()
 
@@ -73,30 +75,12 @@ abstract class Counter(
      * @param isSmooth
      * @param applyPixel
      */
-    protected abstract fun paintFractalPixels(
+    protected abstract suspend fun paintFractalPixels(
         pixelSize: Size,
         complexRect: Rect,
         isSmooth: Boolean = true,
         applyPixel: (Int, Int, Int) -> Unit,
     )
-
-    /**
-     * WIP
-     *
-     * @param bitmap
-     * @param complexRect complex rectangle corresponding to current screen
-     * @param isSmooth
-     * @return [Flow] of [Pixel]s
-     */
-    fun getPixelsToPaint(bitmap: ImageBitmap, complexRect: Rect, isSmooth: Boolean = true): Flow<Pixel> = flow {
-        cartesianProduct(
-            listUntil(bitmap.width),
-            listUntil(bitmap.height),
-        ).map { (x, y) ->
-            val currentPoint = cartesianToComplex(x, y, Size(bitmap.width.toFloat(), bitmap.height.toFloat()), complexRect)
-            emit(Pixel(x, y, painter(calculate(currentPoint, isSmooth))))
-        }
-    }.flowOn(dispatcher).buffer()
 
     companion object {
         /**
@@ -107,6 +91,6 @@ abstract class Counter(
         /**
          * Maximum amount of fractal point calculation iterations
          */
-        const val DEFAULT_MAX_ITERATIONS = 200
+        const val DEFAULT_MAX_ITERATIONS = 100
     }
 }

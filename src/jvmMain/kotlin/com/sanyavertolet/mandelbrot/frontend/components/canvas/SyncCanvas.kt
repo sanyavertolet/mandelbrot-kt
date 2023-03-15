@@ -23,7 +23,7 @@ import com.sanyavertolet.mandelbrot.frontend.components.StateUpdater
 fun DrawScope.syncDraw(image: ImageBitmap?) {
     image?.let { completedImage ->
         drawIntoCanvas { canvas ->
-            canvas.withSave { canvas.drawImage(completedImage, Offset.Zero, Paint().apply { color = Color.Green }) }
+            canvas.withSave { canvas.drawImage(completedImage, Offset.Zero, Paint()) }
         }
     }
 }
@@ -56,5 +56,5 @@ private suspend fun syncImageUpdater(
             screenSize?.let { size ->
                 updateImage { fractal.getImage(size, complexRect, true) }
             }
-        } ?: Unit
+        }
 }

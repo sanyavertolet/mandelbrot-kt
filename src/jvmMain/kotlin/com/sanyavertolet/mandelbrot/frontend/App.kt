@@ -12,8 +12,8 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import com.sanyavertolet.mandelbrot.backend.complex.Complex
 import com.sanyavertolet.mandelbrot.backend.fractal.AbstractFractal
 import com.sanyavertolet.mandelbrot.frontend.components.ToolbarItem
-
 import com.sanyavertolet.mandelbrot.frontend.components.canvas.syncCanvas
+
 import com.sanyavertolet.mandelbrot.frontend.components.toolBar
 
 /**
